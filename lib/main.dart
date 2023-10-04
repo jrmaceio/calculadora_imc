@@ -66,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
               controller: _weightController),
           buildTextFormField(
               label: "Altura (cm)",
-              error: "Insira uma altura!",
+              error: "Insira sua altura!",
               controller: _heightController),
           Padding(
             padding: EdgeInsets.symmetric(vertical: 36.0),
