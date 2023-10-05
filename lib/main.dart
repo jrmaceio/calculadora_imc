@@ -1,3 +1,5 @@
+import 'package:calculadora_imc/models/imc_model.dart';
+import 'package:calculadora_imc/repositorie/imc_repositorie.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -30,7 +32,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
+  List<double> imcList = [];
   TextEditingController _weightController = TextEditingController();
   TextEditingController _heightController = TextEditingController();
   String _result ='';
@@ -46,6 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _result = 'Informe seus dados';
     });
+    imcList.clear();
   }
 
   @override
@@ -84,6 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             child: Text('CALCULAR', style: TextStyle(color: Colors.black)),
           ),
+          buildIMCList(),
         ],
       ),
     ),
@@ -92,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      title: Text('Calculadora de IMC'),
+      title: Text('Calculadora de IMC - Sqlite'),
       backgroundColor: Colors.blue,
       actions: <Widget>[
         IconButton(
@@ -105,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void calculateImc() {
+  void calculateImc() async {
     double weight = double.parse(_weightController.text);
     double height = double.parse(_heightController.text) / 100.0;
     double imc = weight / (height * height);
@@ -125,6 +129,41 @@ class _MyHomePageState extends State<MyHomePage> {
       else
         _result += "Obesidade Grau IIII";
     });
+
+    imcList.add(imc);
+
+    // Save IMC result to the SQLite database
+    final repository = ImcRepository();
+    await repository.save(
+        ImcSQLiteModel(height: height.toString(), weight: weight.toString()));
+  }
+
+  Widget buildIMCList() {
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        itemCount: imcList.length,
+        itemBuilder: (BuildContext context, int index) {
+          double imc = imcList[index];
+          String message = "IMC = ${imc.toStringAsPrecision(2)} ";
+          if (imc < 18.6) {
+            message += "Abaixo do peso";
+          } else if (imc < 24.9)
+            message += "Peso ideal";
+          else if (imc < 29.9)
+            message += "Levemente acima do peso";
+          else if (imc < 34.9)
+            message += "Obesidade Grau I";
+          else if (imc < 39.9)
+            message += "Obesidade Grau II";
+          else
+            message += "Obesidade Graus III";
+          return ListTile(
+            title: Text(message),
+          );
+        },
+      ),
+    );
   }
 
   Widget buildTextFormField(
